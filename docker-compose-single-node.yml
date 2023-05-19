@@ -1,0 +1,12 @@
+version: '3'
+services:
+  hdp-single-node:
+    container_name: hdp-single-node
+    image: jiangcongtao/hadoop-single-node-cluster:3.3.5
+    ports:
+      - "9864:9864"
+      - "9870:9870"
+      - "8088:8088"
+      - "9000:9000"
+      - "8042:8042"
+    hostname: hdp

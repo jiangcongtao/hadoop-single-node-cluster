@@ -10,7 +10,12 @@ Following this steps you can build and use the image to create a Hadoop Single N
 
      $ git clone https://github.com/rancavil/hadoop-single-node-cluster.git
      $ cd hadoop-single-node-cluster
-     $ docker build -t hadoop .
+     $ docker build -t jiangcongtao/hadoop-single-node-cluster:3.3.3  .
+### Build Image
+
+```shell
+ ./build-docker-on-apple-silicon.sh
+```
 
 ## Creating the container
 
@@ -41,6 +46,20 @@ To check if hadoop container is working:
           <name>dfs.permissions</name>
           <value>false</value>
      </property>
+
+## Using `docker-compose` to start single node cluster
+
+### Start
+
+```shell
+docker-compose -f docker-compose-single-node.yml up
+```
+
+### Shudown
+
+```shell
+docker-compose -f docker-compose-single-node.yml down -v
+```
 
 ## A first example
 

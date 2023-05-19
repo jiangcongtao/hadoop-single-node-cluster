@@ -6,6 +6,8 @@
 #         wget \
 #         openjdk-8-jdk \
 #     && apt-get clean
+
+# FROM eclipse-temurin:8u372-b07-jdk
 FROM eclipse-temurin:8-jdk-focal
 RUN apt-get update -y \
     && export DEBIAN_FRONTEND=noninteractive && apt-get install -y --no-install-recommends \
@@ -16,16 +18,29 @@ RUN apt-get update -y \
 RUN useradd -m hduser && echo "hduser:supergroup" | chpasswd && adduser hduser sudo && echo "hduser     ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers && cd /usr/bin/ && sudo ln -s python3 python
 COPY ssh_config /etc/ssh/ssh_config
 
+# Define the build argument
+ARG HADOOP_VERSION=3.3.5
+
+COPY hadoop-$HADOOP_VERSION.tar.gz /home/hduser/
+
 WORKDIR /home/hduser
 USER hduser
 RUN ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa && cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys && chmod 0600 ~/.ssh/authorized_keys
-ENV HADOOP_VERSION=3.3.3
+ENV HADOOP_VERSION=$HADOOP_VERSION
 ENV HADOOP_HOME /home/hduser/hadoop-${HADOOP_VERSION}
-RUN curl -sL --retry 3 \
-  "http://archive.apache.org/dist/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION.tar.gz" \
-  | gunzip \
-  | tar -x -C /home/hduser/ \
- && rm -rf ${HADOOP_HOME}/share/doc
+ENV HADOOP_MAPRED_HOME=$HADOOP_HOME
+# RUN curl -sL --retry 3 \
+#   "http://archive.apache.org/dist/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION.tar.gz" \
+#   | gunzip \
+#   | tar -x -C /home/hduser/ \
+#  && rm -rf ${HADOOP_HOME}/share/doc
+
+RUN if [ ! -f "/home/hduser/hadoop-$HADOOP_VERSION.tar.gz" ]; then \
+      curl -sL --retry 3 "http://archive.apache.org/dist/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION.tar.gz" \
+      -O; \
+    fi \
+ && tar -xzf /home/hduser/hadoop-$HADOOP_VERSION.tar.gz -C /home/hduser/ \
+ && rm -rf ${HADOOP_HOME}/share/doc && rm hadoop-$HADOOP_VERSION.tar.gz
 
 ENV HDFS_NAMENODE_USER hduser
 ENV HDFS_DATANODE_USER hduser
@@ -52,6 +67,6 @@ RUN sudo ln -s ${HADOOP_HOME}/etc/hadoop/docker-entrypoint.sh .
 WORKDIR /home/hduser
 
 # YARNSTART=0 will prevent yarn scheduler from being launched
-ENV YARNSTART 0
+ENV YARNSTART 1
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]

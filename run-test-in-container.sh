@@ -1,0 +1,1 @@
+cat test-in-container.sh | docker exec -i hdp-single-node bash
